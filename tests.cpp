@@ -28,6 +28,7 @@ void TestUseslessClient(){
 	int ret=0;
 	int code=0;
 	std::string root("root");
+	std::string test_usr("test_usr");
 	std::string key1("key 1_1");
 	std::string val1("value 1 1");
 	std::string readback;
@@ -42,24 +43,59 @@ void TestUseslessClient(){
 		code=2;
 		goto exit;
 	}
-	ret=db_client.Set(key1,val1);
+	ret=db_client.UserAdd(test_usr);
 	if(ret!=0){
 		code=3;
 		goto exit;
 	}
-	ret=db_client.Get(key1,readback);
+	ret=db_client.Disconnect();
 	if(ret!=0){
 		code=4;
 		goto exit;
 	}
+	ret=db_client.Connect(test_usr);
+	if(ret!=0){
+		code=5;
+		goto exit;
+	}
+	ret=db_client.Set(key1,val1);
+	if(ret!=0){
+		code=6;
+		goto exit;
+	}
+	ret=db_client.Get(key1,readback);
+	if(ret!=0){
+		code=7;
+		goto exit;
+	}
 	if(readback!=val1){
 		printf("%s\n",readback.data());
-		code=5;
+		code=8;
+		goto exit;
+	}
+	ret=db_client.Remove(key1);
+	if(ret!=0){
+		code=9;
+		goto exit;
+	}
+	ret=db_client.Get(key1,readback);
+	if(ret==0){
+		code=10;
+		goto exit;
+	}
+	ret=db_client.UserRemove(test_usr);
+	if(ret!=0){
+		code=11;
 		goto exit;
 	}
 	ret=db_client.Disconnect();
 	if(ret!=0){
-		code=6;
+		code=12;
+		goto exit;
+	}
+	ret=db_client.Connect(test_usr);
+	if(ret==0){
+		code=13;
 		goto exit;
 	}
 

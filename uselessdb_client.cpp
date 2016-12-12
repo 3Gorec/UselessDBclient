@@ -185,13 +185,97 @@ int UselessDBClient::Set(std::string &key, std::string &value){
 }
 
 int UselessDBClient::Remove(std::string &key){
+	int ret=0;
+	std::string msg_buf;
+	std::list<std::string> str_list;
 
+	assert(init_flag);
+
+	if(!connection_active){
+		return 1;
+	}
+	str_list.push_back(u_name);
+	str_list.push_back(key);
+	ret=UselessProtocolParser::PrepareMsgData(str_list,msg_buf);
+	UselessNLMsg send_msg(MSGTYPE_REQ_REMOVE,msg_buf);
+	UselessNLMsg recv_msg(0,NL_MAX_PAYLOAD);
+	if(ret==0){
+		ret=unl_communicator.SendMsg(send_msg);
+	}
+	if(ret!=-1){
+		ret=unl_communicator.RecvMsg(recv_msg);
+	}
+	if(ret!=-1){
+		if(recv_msg.type==MSGTYPE_RESP_REMOVE){
+			ret=0;
+		}
+		else{
+			ret=1;
+		}
+	}
+	return ret;
 }
 
 int UselessDBClient::UserAdd(std::string &new_user){
+	int ret=0;
+	std::string msg_buf;
+	std::list<std::string> str_list;
 
+	assert(init_flag);
+
+	if(!connection_active){
+		return 1;
+	}
+	str_list.push_back(u_name);
+	str_list.push_back(new_user);
+	ret=UselessProtocolParser::PrepareMsgData(str_list,msg_buf);
+	UselessNLMsg send_msg(MSGTYPE_REQ_USERADD,msg_buf);
+	UselessNLMsg recv_msg(0,NL_MAX_PAYLOAD);
+	if(ret==0){
+		ret=unl_communicator.SendMsg(send_msg);
+	}
+	if(ret!=-1){
+		ret=unl_communicator.RecvMsg(recv_msg);
+	}
+	if(ret!=-1){
+		if(recv_msg.type==MSGTYPE_RESP_USERADD){
+			ret=0;
+		}
+		else{
+			ret=1;
+		}
+	}
+	return ret;
 }
 
 int UselessDBClient::UserRemove(std::string &user_to_del){
+	int ret=0;
+	std::string msg_buf;
+	std::list<std::string> str_list;
 
+	assert(init_flag);
+
+	if(!connection_active){
+		return 1;
+	}
+	str_list.push_back(u_name);
+	str_list.push_back(user_to_del);
+	ret=UselessProtocolParser::PrepareMsgData(str_list,msg_buf);
+	UselessNLMsg send_msg(MSGTYPE_REQ_USERREMOVE,msg_buf);
+	UselessNLMsg recv_msg(0,NL_MAX_PAYLOAD);
+	if(ret==0){
+		ret=unl_communicator.SendMsg(send_msg);
+	}
+	if(ret!=-1){
+		ret=unl_communicator.RecvMsg(recv_msg);
+	}
+	if(ret!=-1){
+		if(recv_msg.type==MSGTYPE_RESP_USERREMOVE){
+			ret=0;
+		}
+		else{
+			ret=1;
+		}
+	}
+	return ret;
 }
