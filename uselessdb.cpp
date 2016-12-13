@@ -5,33 +5,23 @@
  *      Author: gorec
  */
 
+#include "uselessdb.h"
 #include "uselessdb_client.h"
 #include "useless_protocol_parser.h"
 #include <stdio.h>
 #include <assert.h>
 
 UselessDB::UselessDB(){
-	connection_active=false;
-	u_name.clear();
+
 }
 
 UselessDB::~UselessDB(){
 
 }
 
-int UselessDB::Init(int uniq_thread_id){
-	int ret;
-	ret=unl_communicator.Init(uniq_thread_id);
-	if(ret!=0){
-		init_flag=true;
-	}
-	return ret;
-}
 
-int UselessDB::Echo(std::string &request,std::string &response){
+int UselessDB::Echo(UselessNLCore &unl_communicator, std::string &u_name, std::string &request,std::string &response){
 	int ret=0;
-
-	assert(init_flag);
 
 	std::string msg_buf;
 	ret=UselessProtocolParser::PrepareStr(request,msg_buf);
@@ -56,43 +46,41 @@ int UselessDB::Echo(std::string &request,std::string &response){
 	return ret;
 }
 
-int UselessDB::Connect(std::string &u_name){
+UselessDBClient UselessDB::Connect(std::string &u_name, int uniq_thread_id){
 	int ret=0;
+	UselessDBClient db_client(u_name);
 
-	assert(init_flag);
-
-	std::string msg_buf;
-	ret=UselessProtocolParser::PrepareStr(u_name,msg_buf);
-	UselessNLMsg send_msg(MSGTYPE_REQ_CONNECT,msg_buf);
-	UselessNLMsg recv_msg(0,NL_MAX_PAYLOAD);
+	ret=db_client.Init(uniq_thread_id);
 	if(ret==0){
-		ret=unl_communicator.SendMsg(send_msg);
-	}
-	if(ret!=-1){
-		ret=unl_communicator.RecvMsg(recv_msg);
-	}
-	if(ret!=-1){
-		if(recv_msg.type==MSGTYPE_RESP_CONNECT){
-			this->u_name.assign(u_name);
-			connection_active=true;
-			ret=0;
+		std::string msg_buf;
+		ret=UselessProtocolParser::PrepareStr(u_name,msg_buf);
+		UselessNLMsg send_msg(MSGTYPE_REQ_CONNECT,msg_buf);
+		UselessNLMsg recv_msg(0,NL_MAX_PAYLOAD);
+		if(ret==0){
+			ret=db_client.unl_communicator.SendMsg(send_msg);
 		}
-		else{
-			ret=1;
+		if(ret!=-1){
+			ret=db_client.unl_communicator.RecvMsg(recv_msg);
+		}
+		if(ret!=-1){
+			if(recv_msg.type==MSGTYPE_RESP_CONNECT){
+				ret=0;
+			}
+			else{
+				ret=1;
+			}
 		}
 	}
-	return ret;
+	if(ret!=0){
+		throw("Connection error");
+	}
+	return db_client;
 }
 
-int UselessDB::Disconnect(){
+int UselessDB::Disconnect(UselessNLCore &unl_communicator, std::string &u_name){
 	int ret=0;
 	std::string msg_buf;
 
-	assert(init_flag);
-
-	if(!connection_active){
-		return 1;
-	}
 	ret=UselessProtocolParser::PrepareStr(u_name,msg_buf);
 	UselessNLMsg send_msg(MSGTYPE_REQ_DISCONNECT,msg_buf);
 	UselessNLMsg recv_msg(0,NL_MAX_PAYLOAD);
@@ -104,8 +92,6 @@ int UselessDB::Disconnect(){
 	}
 	if(ret!=-1){
 		if(recv_msg.type==MSGTYPE_RESP_DISCONNECT){
-			connection_active=false;
-			u_name.clear();
 			ret=0;
 		}
 		else{
@@ -115,14 +101,9 @@ int UselessDB::Disconnect(){
 	return ret;
 }
 
-int UselessDB::Get(std::string &key, std::string &value){
+int UselessDB::Get(UselessNLCore &unl_communicator, std::string &u_name, std::string &key, std::string &value){
 	int ret=0;
 
-	assert(init_flag);
-
-	if(!connection_active){
-		return 1;
-	}
 	std::string msg_buf;
 	std::list<std::string> str_list;
 	str_list.push_back(u_name);
@@ -151,16 +132,11 @@ int UselessDB::Get(std::string &key, std::string &value){
 	return ret;
 }
 
-int UselessDB::Set(std::string &key, std::string &value){
+int UselessDB::Set(UselessNLCore &unl_communicator, std::string &u_name, std::string &key, std::string &value){
 	int ret=0;
 	std::string msg_buf;
 	std::list<std::string> str_list;
 
-	assert(init_flag);
-
-	if(!connection_active){
-		return 1;
-	}
 	str_list.push_back(u_name);
 	str_list.push_back(key);
 	str_list.push_back(value);
@@ -184,16 +160,11 @@ int UselessDB::Set(std::string &key, std::string &value){
 	return ret;
 }
 
-int UselessDB::Remove(std::string &key){
+int UselessDB::Remove(UselessNLCore &unl_communicator, std::string &u_name, std::string &key){
 	int ret=0;
 	std::string msg_buf;
 	std::list<std::string> str_list;
 
-	assert(init_flag);
-
-	if(!connection_active){
-		return 1;
-	}
 	str_list.push_back(u_name);
 	str_list.push_back(key);
 	ret=UselessProtocolParser::PrepareMsgData(str_list,msg_buf);
@@ -216,16 +187,11 @@ int UselessDB::Remove(std::string &key){
 	return ret;
 }
 
-int UselessDB::UserAdd(std::string &new_user){
+int UselessDB::UserAdd(UselessNLCore &unl_communicator, std::string &u_name, std::string &new_user){
 	int ret=0;
 	std::string msg_buf;
 	std::list<std::string> str_list;
 
-	assert(init_flag);
-
-	if(!connection_active){
-		return 1;
-	}
 	str_list.push_back(u_name);
 	str_list.push_back(new_user);
 	ret=UselessProtocolParser::PrepareMsgData(str_list,msg_buf);
@@ -248,16 +214,11 @@ int UselessDB::UserAdd(std::string &new_user){
 	return ret;
 }
 
-int UselessDB::UserRemove(std::string &user_to_del){
+int UselessDB::UserRemove(UselessNLCore &unl_communicator, std::string &u_name, std::string &user_to_del){
 	int ret=0;
 	std::string msg_buf;
 	std::list<std::string> str_list;
 
-	assert(init_flag);
-
-	if(!connection_active){
-		return 1;
-	}
 	str_list.push_back(u_name);
 	str_list.push_back(user_to_del);
 	ret=UselessProtocolParser::PrepareMsgData(str_list,msg_buf);

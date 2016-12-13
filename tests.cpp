@@ -6,6 +6,7 @@
  */
 
 #include "uselessdb_client.h"
+#include "uselessdb.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <string>
@@ -25,7 +26,18 @@ void TestEchoMultithreading(){
 }
 
 void TestUseslessClient(){
-	int ret=0;
+	try{
+		std::string root("root");
+		std::string key("key 1_1");
+		std::string val1("value 1 1");
+		auto db=UselessDB::Connect(root,0);
+		db[key]=val1;
+	}catch(char *str){
+		printf("%s\n",str);
+	}
+
+
+	/*int ret=0;
 	int code=0;
 	std::string root("root");
 	std::string test_usr("test_usr");
@@ -106,12 +118,12 @@ exit:
 	else{
 		printf("UselessDBClient test succesfull\n");
 	}
-
+*/
 }
 
 
 static void* Thread_EchoFunction(void* argc){
-	int ret=0,i=0,pid=0;
+	/*int ret=0,i=0,pid=0;
 	int thread_num=*((int*)argc);
 	std::string request, response;
 	request.assign("Echo TEST!!!");
@@ -131,5 +143,5 @@ static void* Thread_EchoFunction(void* argc){
 				break;
 			}
 		}
-	}
+	}*/
 }
