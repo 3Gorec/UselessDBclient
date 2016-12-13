@@ -12,6 +12,19 @@
 
 static void* Thread_EchoFunction(void* argc);
 
+#define PROCESS_RET(expr, err_code) do{ \
+										if(expr){	\
+											printf("success\n");	\
+										}	\
+										else{	\
+											printf("FAIL\n");	\
+											code=(err_code);	\
+											goto exit;	\
+										}	\
+									}while(0)
+
+
+
 void TestEchoMultithreading(){
 	pthread_t thread1;
 	pthread_t thread2;
@@ -33,71 +46,56 @@ void TestUseslessClient(){
 	std::string val1("value 1 1");
 	std::string readback;
 	UselessDBClient db_client;
+	printf("DB client initializing: ");
 	ret=db_client.Init(0);
-	if(ret==0){
-		code=1;
-		goto exit;
-	}
+	PROCESS_RET(ret!=0,1);
+
+	printf("Connecting as %s: ",root.data());
 	ret=db_client.Connect(root);
-	if(ret!=0){
-		code=2;
-		goto exit;
-	}
+	PROCESS_RET(ret==0,2);
+
+	printf("Add user %s: ",test_usr.data());
 	ret=db_client.UserAdd(test_usr);
-	if(ret!=0){
-		code=3;
-		goto exit;
-	}
+	PROCESS_RET(ret==0,3);
+
+	printf("Disconnect: ");
 	ret=db_client.Disconnect();
-	if(ret!=0){
-		code=4;
-		goto exit;
-	}
+	PROCESS_RET(ret==0,4);
+
+	printf("Connecting as %s: ",test_usr.data());
 	ret=db_client.Connect(test_usr);
-	if(ret!=0){
-		code=5;
-		goto exit;
-	}
+	PROCESS_RET(ret==0,5);
+
+	printf("Set key='%s' value='%s': ",key1.data(),val1.data());
 	ret=db_client.Set(key1,val1);
-	if(ret!=0){
-		code=6;
-		goto exit;
-	}
+	PROCESS_RET(ret==0,6);
+
+	printf("Get key='%s': ",key1.data());
 	ret=db_client.Get(key1,readback);
-	if(ret!=0){
-		code=7;
-		goto exit;
-	}
-	if(readback!=val1){
-		printf("%s\n",readback.data());
-		code=8;
-		goto exit;
-	}
+	PROCESS_RET(ret==0,7);
+
+	printf("Value comparing value='%s' readback='%s': ",val1.data(),readback.data());
+	PROCESS_RET(ret==0,8);
+
+	printf("Removing key='%s': ",key1.data());
 	ret=db_client.Remove(key1);
-	if(ret!=0){
-		code=9;
-		goto exit;
-	}
+	PROCESS_RET(ret==0,9);
+
+	printf("Get removed key='%s': ",key1.data());
 	ret=db_client.Get(key1,readback);
-	if(ret==0){
-		code=10;
-		goto exit;
-	}
+	PROCESS_RET(ret!=0,10);
+
+	printf("User remove '%s': ",test_usr.data());
 	ret=db_client.UserRemove(test_usr);
-	if(ret!=0){
-		code=11;
-		goto exit;
-	}
+	PROCESS_RET(ret==0,11);
+
+	printf("Disconnect: ");
 	ret=db_client.Disconnect();
-	if(ret!=0){
-		code=12;
-		goto exit;
-	}
+	PROCESS_RET(ret==0,12);
+
+	printf("Connecting as removed user %s: ",test_usr.data());
 	ret=db_client.Connect(test_usr);
-	if(ret==0){
-		code=13;
-		goto exit;
-	}
+	PROCESS_RET(ret!=0,13);
 
 exit:
 	if(code!=0){
