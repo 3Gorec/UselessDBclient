@@ -32,7 +32,7 @@ void TestUseslessClient(){
 	std::string key1("key 1_1");
 	std::string val1("value 1 1");
 	std::string readback;
-	UselessDBClient db_client;
+	UselessDB db_client;
 	ret=db_client.Init(0);
 	if(ret==0){
 		code=1;
@@ -115,7 +115,7 @@ static void* Thread_EchoFunction(void* argc){
 	int thread_num=*((int*)argc);
 	std::string request, response;
 	request.assign("Echo TEST!!!");
-	UselessDBClient client;
+	UselessDB client;
 	pid=client.Init(thread_num);
 	if(pid!=0){
 		for(i=0;i<100;i++){
