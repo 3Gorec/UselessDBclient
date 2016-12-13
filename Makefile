@@ -10,6 +10,7 @@ SYMBOLS=
 DSYMBOLS=$(foreach sym, $(SYMBOLS), -D$(sym))
 LDFLAGS=-lpthread 
 TARGET=uselessdbclient
+INSTALL_DIR=/usr/local/bin
 vpath %.cpp $(DIRS)
 
 all: debug
@@ -31,3 +32,9 @@ prepare:
 
 clean:
 	rm -Rf $(BUILD_DIR)
+
+install:
+	install $(BUILD_DIR)/$(TARGET) $(INSTALL_DIR)
+
+uninstall:
+	rm -rf $(INSTALL_DIR)/$(TARGET)
